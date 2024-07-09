@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WallpaperWonder: Stunning Smartphone Backgrounds</title>
+    <title>Awesome Phonepapers: Stunning Smartphone Backgrounds</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -187,7 +187,7 @@
 <body>
     <div class="fixed-header">
         <header>
-            <h1>Awesome PhonePapers: Stunning Smartphone Backgrounds</h1>
+            <h1>WallpaperWonder: Stunning Smartphone Backgrounds</h1>
         </header>
         <div id="search-area">
             <div id="search-bar">
@@ -226,11 +226,27 @@
         const githubUser = 'azaspravidia';
         const githubRepo = 'awesome-phonepapers';
         const githubBranch = 'main'; // or 'master', depending on your default branch name
-        const wallpapersPath = 'wallpapers'; // The folder in your repo where wallpapers are stored
 
-        let allWallpapers = [];
+        // Array of wallpaper objects
+        const wallpapers = [
+            {
+                id: 1,
+                filename: 'beach-1.png',
+                tags: ['nature', 'mountain'],
+                free: true
+            },
+            {
+                id: 2,
+                filename: 'beach-2.png',
+                tags: ['abstract', 'colorful'],
+                free: false
+            },
+            // ... add more wallpaper objects as needed
+        ];
+
         let page = 1;
         let isLoading = false;
+        let allWallpapers = [];
         let autoScrollInterval;
 
         const container = document.getElementById('wallpaper-container');
@@ -245,40 +261,24 @@
         const loading = document.getElementById('loading');
         const tagButtons = document.querySelectorAll('.tag-button');
 
-        async function fetchWallpapers() {
-            const apiUrl = `https://api.github.com/repos/${githubUser}/${githubRepo}/contents/${wallpapersPath}`;
-            const response = await fetch(apiUrl);
-            const data = await response.json();
-            
-            return data
-                .filter(file => file.type === 'file' && file.name.match(/\.(jpg|jpeg|png|gif)$/i))
-                .map(file => {
-                    const [name, ...tagsParts] = file.name.split('_');
-                    const tags = tagsParts.join('_').split('.')[0].split('-');
-                    return {
-                        id: file.sha,
-                        filename: file.name,
-                        src: file.download_url,
-                        largeSrc: file.download_url,
-                        tags: tags,
-                        free: !file.name.toLowerCase().includes('paid')
-                    };
-                });
+        function getGithubUrl(filename) {
+            return `https://raw.githubusercontent.com/${githubUser}/${githubRepo}/${githubBranch}/wallpapers/${filename}`;
         }
 
-        async function loadWallpapers() {
+        function loadWallpapers() {
             if (isLoading) return;
             isLoading = true;
             loading.style.display = 'block';
 
-            if (allWallpapers.length === 0) {
-                allWallpapers = await fetchWallpapers();
-            }
-
             const start = (page - 1) * 10;
             const end = start + 10;
-            const newWallpapers = allWallpapers.slice(start, end);
+            const newWallpapers = wallpapers.slice(start, end).map(wallpaper => ({
+                ...wallpaper,
+                src: getGithubUrl(wallpaper.filename),
+                largeSrc: getGithubUrl(wallpaper.filename) // Using the same image for both thumbnail and large version
+            }));
 
+            allWallpapers = [...allWallpapers, ...newWallpapers];
             renderWallpapers(newWallpapers);
             
             page++;
@@ -286,7 +286,7 @@
             loading.style.display = 'none';
 
             // If we've loaded all wallpapers, remove the scroll event listener
-            if (end >= allWallpapers.length) {
+            if (end >= wallpapers.length) {
                 window.removeEventListener('scroll', checkScroll);
             }
         }
@@ -319,7 +319,7 @@
         function downloadWallpaper(wallpaper) {
             const link = document.createElement('a');
             link.href = wallpaper.largeSrc;
-            link.download = wallpaper.filename;
+            link.download = `wallpaper_${wallpaper.id}.jpg`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
