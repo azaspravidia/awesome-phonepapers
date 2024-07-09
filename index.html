@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WallpaperWonder: Stunning Smartphone Backgrounds</title>
+    <title>Awesome Phonepapers: Stunning Smartphone Backgrounds</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -187,7 +187,7 @@
 <body>
     <div class="fixed-header">
         <header>
-            <h1>Awesome PhonePapers: Stunning Smartphone Backgrounds</h1>
+            <h1>Awesome Phonepapers: Stunning Smartphone Backgrounds</h1>
         </header>
         <div id="search-area">
             <div id="search-bar">
@@ -229,6 +229,7 @@
         const wallpapersPath = 'wallpapers'; // The folder in your repo where wallpapers are stored
 
         let allWallpapers = [];
+        let displayedWallpapers = [];
         let page = 1;
         let isLoading = false;
         let autoScrollInterval;
@@ -266,6 +267,13 @@
                 });
         }
 
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
         async function loadWallpapers() {
             if (isLoading) return;
             isLoading = true;
@@ -273,22 +281,33 @@
 
             if (allWallpapers.length === 0) {
                 allWallpapers = await fetchWallpapers();
+                shuffleArray(allWallpapers);
             }
 
-            const start = (page - 1) * 10;
-            const end = start + 10;
-            const newWallpapers = allWallpapers.slice(start, end);
+            const wallpapersPerPage = 10;
+            let newWallpapers = [];
+
+            for (let i = 0; i < wallpapersPerPage; i++) {
+                if (displayedWallpapers.length === allWallpapers.length) {
+                    // If we've displayed all wallpapers, start over
+                    displayedWallpapers = [];
+                }
+
+                // Find a wallpaper that hasn't been displayed yet
+                let wallpaper;
+                do {
+                    wallpaper = allWallpapers[Math.floor(Math.random() * allWallpapers.length)];
+                } while (displayedWallpapers.includes(wallpaper));
+
+                newWallpapers.push(wallpaper);
+                displayedWallpapers.push(wallpaper);
+            }
 
             renderWallpapers(newWallpapers);
             
             page++;
             isLoading = false;
             loading.style.display = 'none';
-
-            // If we've loaded all wallpapers, remove the scroll event listener
-            if (end >= allWallpapers.length) {
-                window.removeEventListener('scroll', checkScroll);
-            }
         }
 
         function renderWallpapers(wallpaperList) {
@@ -353,7 +372,10 @@
                 wallpaper.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
             );
             container.innerHTML = '';
-            renderWallpapers(filteredWallpapers);
+            displayedWallpapers = [];
+            shuffleArray(filteredWallpapers);
+            renderWallpapers(filteredWallpapers.slice(0, 10));
+            displayedWallpapers = filteredWallpapers.slice(0, 10);
         }
 
         searchButton.addEventListener('click', () => {
